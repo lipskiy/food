@@ -121,8 +121,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
    // Сначала объявляем переменные.
    const modalTrigger = document.querySelectorAll('[data-modal]'),
-         modal = document.querySelector('.modal'),
-         modalCloseBtn = document.querySelector('[data-close]');
+         modal = document.querySelector('.modal');
 
    // Алгоритм такой. Понадобится всего 2 функции. Одна отвечает за открытие модалки, вторая за закрытие. Ну и нужно подвязать на несколько триггеров, чтобы функция срабатывала и на всех кнопках. Так как мы не можем на пвсевдомассив навесить обработчик событий, то нам просто нужно перебрать все кнопки через forEach.
 
@@ -148,11 +147,9 @@ window.addEventListener('DOMContentLoaded', () => {
       document.body.style.overflow = '';
    }
 
-   modalCloseBtn.addEventListener('click', closeModal);
-
    // Для того чтобы модалку можно было закрыть кликнув на область страницы используем обрабочтик событий и следим куда кликнул пользователь.
    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
+      if (e.target === modal || e.target.getAttribute('data-close') == '') {
          closeModal();
       }
    });
@@ -165,7 +162,7 @@ window.addEventListener('DOMContentLoaded', () => {
    });
 
    //Чтобы модалка появлялась через опредленный промежуток времени сама. Используем setTimeout.
-   // const modalTimerId = setTimeout(openModal, 15000);
+   const modalTimerId = setTimeout(openModal, 50000);
 
    //Чтобы модалка открывалась, когда пользователь долистал страницу до конца. Мы можем использовать событие scroll и вешается глобально на window.  Логика: когда мы берем контент, который уже проскролили и видимый контент и при сложении они совпадают с полной прокруткой сайта, то значит пользователь долистал до конца. Тк был обнаружен баг, что модалка не видна, то в конце использовался минус 1 пиксель. Тк каждый раз модалка появляется при скролле до конца, то используем удаление обработчика события. Чтобы удалить обработчик события, то мы должны делать ссылку на функцию, которая исполнялась.
    function showModalByScroll () {
@@ -257,7 +254,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
    // Временно создаем список фраз для оповщения пользователя. 
    const message = {
-      loading: 'Загрузка...',
+      loading: 'img/form/spinner.svg',
       success: 'Спасибо! Скоро мы с Вами свяжемся',
       failure: 'Что то пошло не так...'
    };
@@ -273,10 +270,13 @@ window.addEventListener('DOMContentLoaded', () => {
          e.preventDefault();
 
          // Динамически создаем новый блок для вывода сообщения для пользователя.
-         const statusMessage = document.createElement('div');
-         statusMessage.classList.add('status');
-         statusMessage.textContent = message.loading;
-         form.appendChild(statusMessage);
+         const statusMessage = document.createElement('img');
+         statusMessage.src = message.loading;
+         statusMessage.style.cssText = `
+            display: block;
+            margin: 0 auto;
+         `;
+         form.append(statusMessage);
 
          const request = new XMLHttpRequest();
          request.open('POST', 'server.php'); // Для настройки запроса.
@@ -290,16 +290,38 @@ window.addEventListener('DOMContentLoaded', () => {
          request.addEventListener('load', () => {
             if (request.status === 200) {
                console.log(request.response);
-               statusMessage.textContent = message.success;
+               showThanksModal(message.success);
                form.reset(); // Очистка формы
-               setTimeout(() => {
-                  statusMessage.remove();
-               }, 2000); // Удаляет блок с сообщением со страницы.
+               statusMessage.remove();
             } else {
-               statusMessage.textContent = message.failure;
+               showThanksModal(message.failure);
             }
          }); // Отслеживаем конечную загрузку нашего запроса.
       });
    }
+
+   function showThanksModal(message) {
+        const prevModalDialog = document.querySelector('.modal__dialog');
+
+        prevModalDialog.classList.add('hide');
+        openModal();
+
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class="modal__content">
+                <div class="modal__close" data-close>×</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+
+        document.querySelector('.modal').append(thanksModal);
+        setTimeout(() => {
+            thanksModal.remove();
+            prevModalDialog.classList.add('show');
+            prevModalDialog.classList.remove('hide');
+            closeModal();
+        }, 4000);
+    }
 
 });
