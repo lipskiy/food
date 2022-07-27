@@ -276,27 +276,32 @@ window.addEventListener('DOMContentLoaded', () => {
             display: block;
             margin: 0 auto;
          `;
-         form.append(statusMessage);
+         form.insertAdjacentElement('afterend', statusMessage);
 
-         const request = new XMLHttpRequest();
-         request.open('POST', 'server.php'); // Для настройки запроса.
-
-         // request.setRequestHeader('Content-type', 'multipart/form-data'); // Настройка заголовков. Когда используем связку XMLHttpRequest и form-data нам заголовок устанавливать не нужно. Он устанавливется автоматически. Из за такой ошибки сервер может не получить от нас данные.ЭТО ВАЖНО!
-         // request.setRequestHeader('Content-type', 'application/json'); // Если вдруг нам нужен формат JSON.
          const formData = new FormData(form); // Специальный объект, который позволяет с определенной формы сформировать данные, которые заполнил пользователь. Формат: ключ - значение.
 
-         request.send(formData); // Отправка данных с помощью метода send.
+         const object = {};
+         formData.forEach(function(value, key){
+            object[key] = value;
+         });
 
-         request.addEventListener('load', () => {
-            if (request.status === 200) {
-               console.log(request.response);
-               showThanksModal(message.success);
-               form.reset(); // Очистка формы
-               statusMessage.remove();
-            } else {
-               showThanksModal(message.failure);
-            }
-         }); // Отслеживаем конечную загрузку нашего запроса.
+         fetch('server.php', {
+            method: "POST",
+            headers: {
+               'Content-type': 'application/json'
+            },
+            body: JSON.stringify(object)
+         })
+         .then(data => data.text())
+         .then(data => {
+            console.log(data);
+            showThanksModal(message.success);
+            statusMessage.remove();
+         }).catch(() => {
+            showThanksModal(message.failure);
+         }).finally(() => {
+            form.reset(); // Очистка формы
+         });
       });
    }
 
