@@ -1,5 +1,5 @@
 window.addEventListener('DOMContentLoaded', () => {
-   // Tabs
+   // Tabs ============================================================================================>>
 
    // Получаем переменные, с которыми мы будем взаимодействовать. Будем использовать делигирование событий. 
    const tabs = document.querySelectorAll('.tabheader__item'),
@@ -44,7 +44,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
    });
 
-   // Timer
+   // Timer ============================================================================================>>
 
    // Переменная, которая определяет дэдлайн. Наша отправная точка.
    const deadline = '2022-09-10';
@@ -117,7 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
    // Два аргумента. Селектор и дэдлайн. 
    setClock('.timer', deadline);
 
-   // Modal 
+   // Modal ============================================================================================>>
 
    // Сначала объявляем переменные.
    const modalTrigger = document.querySelectorAll('[data-modal]'),
@@ -174,7 +174,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
    window.addEventListener('scroll', showModalByScroll);
 
-   // Используем классы для карточек 
+   // Используем классы для карточек ============================================================================================>>
 
    // Создаем класс и переменные, которые нам понадобятся 
    class MenuCard {
@@ -302,26 +302,75 @@ window.addEventListener('DOMContentLoaded', () => {
    }
 
    function showThanksModal(message) {
-        const prevModalDialog = document.querySelector('.modal__dialog');
+      const prevModalDialog = document.querySelector('.modal__dialog');
 
-        prevModalDialog.classList.add('hide');
-        openModal();
+      prevModalDialog.classList.add('hide');
+      openModal();
 
-        const thanksModal = document.createElement('div');
-        thanksModal.classList.add('modal__dialog');
-        thanksModal.innerHTML = `
-            <div class="modal__content">
-                <div class="modal__close" data-close>×</div>
-                <div class="modal__title">${message}</div>
-            </div>
-        `;
+      const thanksModal = document.createElement('div');
+      thanksModal.classList.add('modal__dialog');
+      thanksModal.innerHTML = `
+         <div class="modal__content">
+               <div class="modal__close" data-close>×</div>
+               <div class="modal__title">${message}</div>
+         </div>
+      `;
 
-        document.querySelector('.modal').append(thanksModal);
-        setTimeout(() => {
-            thanksModal.remove();
-            prevModalDialog.classList.add('show');
-            prevModalDialog.classList.remove('hide');
-            closeModal();
-        }, 4000);
-    }
+      document.querySelector('.modal').append(thanksModal);
+      setTimeout(() => {
+         thanksModal.remove();
+         prevModalDialog.classList.add('show');
+         prevModalDialog.classList.remove('hide');
+         closeModal();
+      }, 4000);
+   }
+
+   // Slider ============================================================================================>>
+
+   const slides = document.querySelectorAll('.offer__slide'),
+         prev = document.querySelector('.offer__slider-prev'),
+         next = document.querySelector('.offer__slider-next'),
+         total = document.querySelector('#total'),
+         current = document.querySelector('#current');
+   let slideIndex = 1; // Индекс, который определяет текущее положение в слайдере
+
+   showSlides(slideIndex);
+
+   if(slides.length < 10) {
+      total.textContent = `0${slides.length}`;
+   } else {
+      total.textContent = slides.length;
+   }
+
+   function showSlides(n) {
+      if(n > slides.length) {
+         slideIndex = 1;
+      }
+
+      if(n < 1) {
+         slideIndex = slides.length;
+      }
+
+      slides.forEach((item) => item.style.display = 'none');
+
+      slides[slideIndex - 1].style.display = 'block';
+
+      if(slides.length < 10) {
+         current.textContent = `0${slideIndex}`;
+      } else {
+         current.textContent = slideIndex;
+      }
+   }
+
+   function plusSlides(n) {
+      showSlides(slideIndex += n);
+   }
+
+   prev.addEventListener('click', () => {
+      plusSlides(-1);
+   });
+
+   next.addEventListener('click', () => {
+      plusSlides(1);
+   });
 });
