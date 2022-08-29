@@ -51,7 +51,7 @@ function slider() {
   `;
   slider.append(indicators);
 
-  for (i = 0; i < slides.length; i++) {
+  for (let i = 0; i < slides.length; i++) {
     const dot = document.createElement('li');
     dot.setAttribute('data-slide-to', i + 1);
     dot.style.cssText = `
@@ -191,4 +191,4 @@ function slider() {
   // });
 }
 
-module.exports = slider;
+export default slider;
