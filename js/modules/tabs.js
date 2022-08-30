@@ -1,10 +1,10 @@
-function tabs() {
+function tabs(tabsSelector, tabsContentSelector, tabsParentSelector, activeClass) {
   // Tabs ============================================================================================>>
 
   // Получаем переменные, с которыми мы будем взаимодействовать. Будем использовать делигирование событий. 
-  const tabs = document.querySelectorAll('.tabheader__item'),
-        tabsContent = document.querySelectorAll('.tabcontent'),
-        tabsParent = document.querySelector('.tabheader__items');
+  const tabs = document.querySelectorAll(tabsSelector),
+        tabsContent = document.querySelectorAll(tabsContentSelector),
+        tabsParent = document.querySelector(tabsParentSelector);
 
   // Скрываем все ненужные нам Табы. Перебираем псевдомассив. Добавляем класс hide и удаляем классы show and fade. Это делается для анимации табов.
   function hideTabContent() {
@@ -15,7 +15,7 @@ function tabs() {
 
     // У каждого из элементов Таба удаляем класс активности.
     tabs.forEach(item => {
-        item.classList.remove('tabheader__item_active');
+        item.classList.remove(activeClass);
     });   
   }
 
@@ -23,7 +23,7 @@ function tabs() {
   function showTabContent(i = 0) {
     tabsContent[i].classList.add('show', 'fade');
     tabsContent[i].classList.remove('hide');
-    tabs[i].classList.add('tabheader__item_active');
+    tabs[i].classList.add(activeClass);
   }
 
   hideTabContent();
@@ -33,8 +33,8 @@ function tabs() {
   tabsParent.addEventListener('click', (event) => {
     const target = event.target; // Это если нам нужно все время использовать event.target. 
 
-    // Определяем точно ли мы кликнули в таб. Перебираем все эелементы в псевдомассиве, чтобы понять в какой мы клацнули и какой нужно показать. Два аргумента: таб и номер элемента по порядку. Если эелемент, в который мы кликнули, будет совпадать с элементом, который мы перебираем, то мы вызываем две наши функции.
-    if (target && target.classList.contains('tabheader__item')) {
+    // Определяем точно ли мы кликнули в таб. Перебираем все эелементы в псевдомассиве, чтобы понять в какой мы клацнули и какой нужно показать. Два аргумента: таб и номер элемента по порядку. Если эелемент, в который мы кликнули, будет совпадать с элементом, который мы перебираем, то мы вызываем две наши функции. Метод slice() - сформирует новую строку без 1 символа в данном случае. 
+    if (target && target.classList.contains(tabsSelector.slice(1))) {
         tabs.forEach((item, i) => {
           if (target == item) {
               hideTabContent();

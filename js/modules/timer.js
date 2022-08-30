@@ -1,9 +1,6 @@
-function timer() {
+function timer(id, deadline) {
   // Timer ============================================================================================>>
-
-  // Переменная, которая определяет дэдлайн. Наша отправная точка.
-  const deadline = '2022-09-10';
-
+  
   // Функция, которая определяет разницу между дэдлайном и текущим временем.
   function getTimeRemaining(endtime) {
     let days, hours, minutes, seconds;
@@ -69,7 +66,7 @@ function timer() {
     }
   }
 
-  setClock('.timer', deadline);
+  setClock(id, deadline);
 }
 
 export default timer;

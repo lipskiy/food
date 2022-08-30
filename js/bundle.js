@@ -137,6 +137,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
+/* harmony import */ var _services_services__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../services/services */ "./js/services/services.js");
+
+
 function cards() {
   // Используем классы для карточек ============================================================================================>>
 
@@ -184,22 +187,12 @@ function cards() {
     }
   }
 
-  getResource('http://localhost:3000/menu')
+  (0,_services_services__WEBPACK_IMPORTED_MODULE_0__.getResource)('http://localhost:3000/menu')
     .then(data => {
       data.forEach(({img, altimg, title, descr, price}) => {
         new MenuCard(img, altimg, title, descr, price, ".menu .container").render();
       });
     });
-
-  async function getResource(url) {
-    let res = await fetch(url);
-
-    if (!res.ok) {
-        throw new Error(`Could not fetch ${url}, status: ${res.status}`);
-    }
-
-    return await res.json();
-  }
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (cards);
@@ -216,11 +209,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-function forms() {
+/* harmony import */ var _modal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./modal */ "./js/modules/modal.js");
+/* harmony import */ var _services_services__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/services */ "./js/services/services.js");
+
+
+
+function forms(formSelector, modalTimerId) {
   // Forms =================================================================================================>>
 
   // Получаем все формы, которые у нас есть.
-  const forms = document.querySelectorAll('form');
+  const forms = document.querySelectorAll(formSelector);
 
   // Временно создаем список фраз для оповщения пользователя. 
   const message = {
@@ -233,20 +231,6 @@ function forms() {
   forms.forEach(item => {
     bindPostData(item);
   });
-
-
-  // Логика: ф-ия настраивает запрос, посылает запрос на сервер, получает какой то ответ и трансформирует ответ в json.  
-  const postData = async (url, data) => {
-    const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          'Content-type': 'application/json'
-        },
-        body: data
-    });
-
-    return await res.json();
-  };
 
   // Создаем функцию, которая будет отвечать за постинг данных. Передаем форму, потому что удобно взять и навесить обработчик событий. Submit - срабатывает каждый раз, когда мы пытаемся отправить какую то форму. Element - нужен для того, чтобы отменить стандартное поведение браузера (перезагрузку страницы).
   function bindPostData(form) {
@@ -267,7 +251,7 @@ function forms() {
         // Логика: берем наши данные, сначала превращаем в массив массивов, затем после превращаем в классический объект (fromEntries), а после этот объект превращаем в json. 
         const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-        postData('http://localhost:3000/requests', json)
+        (0,_services_services__WEBPACK_IMPORTED_MODULE_1__.postData)('http://localhost:3000/requests', json)
         .then(data => {
           console.log(data);
           showThanksModal(message.success);
@@ -284,7 +268,7 @@ function forms() {
     const prevModalDialog = document.querySelector('.modal__dialog');
 
     prevModalDialog.classList.add('hide');
-    openModal();
+    (0,_modal__WEBPACK_IMPORTED_MODULE_0__.openModal)('.modal', modalTimerId);
 
     const thanksModal = document.createElement('div');
     thanksModal.classList.add('modal__dialog');
@@ -300,7 +284,7 @@ function forms() {
         thanksModal.remove();
         prevModalDialog.classList.add('show');
         prevModalDialog.classList.remove('hide');
-        closeModal();
+        (0,_modal__WEBPACK_IMPORTED_MODULE_0__.closeModal)('.modal');
     }, 4000);
   }
 }
@@ -317,60 +301,66 @@ function forms() {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "closeModal": () => (/* binding */ closeModal),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "openModal": () => (/* binding */ openModal)
 /* harmony export */ });
-function modal() {
+function closeModal (modalSelector) {
+  const modal = document.querySelector(modalSelector);
+
+  modal.classList.add('hide');
+  modal.classList.remove('show');
+  // modal.classList.toggle('show');
+  document.body.style.overflow = '';
+}
+
+// Мы при клике добавляем класс "показать" и убираем класс "скрыть". Через оверфлоу убрал скролл страницы при открытом модальном окне. Можно через toggle. Для того, чтобы модалка не открывалась сама если пользователь сам кликнул и вызвал модалку мы используем clearInterval.
+function openModal (modalSelector, modalTimerId) {
+  const modal = document.querySelector(modalSelector);
+
+  modal.classList.add('show');
+  modal.classList.remove('hide');
+  // modal.classList.toggle('show');
+  document.body.style.overflow = 'hidden';
+
+  console.log(modalTimerId);
+  if(modalTimerId) {
+    clearInterval(modalTimerId);
+  }
+}
+
+function modal(triggerSelector, modalSelector, modalTimerId) {
   // Modal ============================================================================================>>
 
   // Сначала объявляем переменные.
-  const modalTrigger = document.querySelectorAll('[data-modal]'),
-        modal = document.querySelector('.modal');
+  const modalTrigger = document.querySelectorAll(triggerSelector),
+        modal = document.querySelector(modalSelector);
 
   // Алгоритм такой. Понадобится всего 2 функции. Одна отвечает за открытие модалки, вторая за закрытие. Ну и нужно подвязать на несколько триггеров, чтобы функция срабатывала и на всех кнопках. Так как мы не можем на пвсевдомассив навесить обработчик событий, то нам просто нужно перебрать все кнопки через forEach.
 
-  // Мы при клике добавляем класс "показать" и убираем класс "скрыть". Через оверфлоу убрал скролл страницы при открытом модальном окне. Можно через toggle. Для того, чтобы модалка не открывалась сама если пользователь сам кликнул и вызвал модалку мы используем clearInterval.
-  function openModal () {
-    modal.classList.add('show');
-    modal.classList.remove('hide');
-    // modal.classList.toggle('show');
-    document.body.style.overflow = 'hidden';
-    clearInterval(modalTimerId);
-  }
-
   modalTrigger.forEach(btn => {
-    btn.addEventListener('click', openModal);
+    btn.addEventListener('click', () => openModal(modalSelector, modalTimerId));
   });
 
-  // Так как у нас переиспользуется функция открытия и закрытия модального окна, то мы выносим ее в отдельную функцию, чтобы оптимизировать код.
-
-  function closeModal () {
-    modal.classList.add('hide');
-    modal.classList.remove('show');
-    // modal.classList.toggle('show');
-    document.body.style.overflow = '';
-  }
 
   // Для того чтобы модалку можно было закрыть кликнув на область страницы используем обрабочтик событий и следим куда кликнул пользователь.
   modal.addEventListener('click', (e) => {
     if (e.target === modal || e.target.getAttribute('data-close') == '') {
-        closeModal();
+        closeModal(modalSelector);
     }
   });
 
   // Чтобы закрыть модалку на нажатие кнопки ESC на клавиатуре. Для этого используем событие "keydown". Для этого мы проверяем код клавиши, на которую нажали. Для того чтобы Escape срабатывал только тогда, когда открыто модальное окно мы это прописываем в условии.
   document.addEventListener('keydown', (e) => {
     if (e.code === "Escape" && modal.classList.contains('show')) {
-        closeModal();
+        closeModal(modalSelector);
     }
   });
-
-  //Чтобы модалка появлялась через опредленный промежуток времени сама. Используем setTimeout.
-  const modalTimerId = setTimeout(openModal, 50000);
 
   //Чтобы модалка открывалась, когда пользователь долистал страницу до конца. Мы можем использовать событие scroll и вешается глобально на window.  Логика: когда мы берем контент, который уже проскролили и видимый контент и при сложении они совпадают с полной прокруткой сайта, то значит пользователь долистал до конца. Тк был обнаружен баг, что модалка не видна, то в конце использовался минус 1 пиксель. Тк каждый раз модалка появляется при скролле до конца, то используем удаление обработчика события. Чтобы удалить обработчик события, то мы должны делать ссылку на функцию, которая исполнялась.
   function showModalByScroll () {
     if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
-        openModal();
+        openModal(modalSelector, modalTimerId);
         window.removeEventListener('scroll', showModalByScroll);
     }
   }
@@ -379,6 +369,8 @@ function modal() {
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (modal);
+
+
 
 /***/ }),
 
@@ -392,20 +384,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-function slider() {
+function slider({container, slide, nextArrow, prevArrow, totalCounter, currentCounter, wrapper, field}) {
   // Slider ============================================================================================>>
 
   let slideIndex = 1; // Индекс, который определяет текущее положение в слайдере
   let offset = 0;
 
-  const slides = document.querySelectorAll('.offer__slide'),
-        slider = document.querySelector('.offer__slider'),
-        prev = document.querySelector('.offer__slider-prev'),
-        next = document.querySelector('.offer__slider-next'),
-        total = document.querySelector('#total'),
-        current = document.querySelector('#current'),
-        slidesWrapper = document.querySelector('.offer__slider-wrapper'),
-        slidesField = document.querySelector('.offer__slider-inner'),
+  const slides = document.querySelectorAll(slide),
+        slider = document.querySelector(container),
+        prev = document.querySelector(prevArrow),
+        next = document.querySelector(nextArrow),
+        total = document.querySelector(totalCounter),
+        current = document.querySelector(currentCounter),
+        slidesWrapper = document.querySelector(wrapper),
+        slidesField = document.querySelector(field),
         width = window.getComputedStyle(slidesWrapper).width;
 
   if (slides.length < 10) {
@@ -599,13 +591,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-function tabs() {
+function tabs(tabsSelector, tabsContentSelector, tabsParentSelector, activeClass) {
   // Tabs ============================================================================================>>
 
   // Получаем переменные, с которыми мы будем взаимодействовать. Будем использовать делигирование событий. 
-  const tabs = document.querySelectorAll('.tabheader__item'),
-        tabsContent = document.querySelectorAll('.tabcontent'),
-        tabsParent = document.querySelector('.tabheader__items');
+  const tabs = document.querySelectorAll(tabsSelector),
+        tabsContent = document.querySelectorAll(tabsContentSelector),
+        tabsParent = document.querySelector(tabsParentSelector);
 
   // Скрываем все ненужные нам Табы. Перебираем псевдомассив. Добавляем класс hide и удаляем классы show and fade. Это делается для анимации табов.
   function hideTabContent() {
@@ -616,7 +608,7 @@ function tabs() {
 
     // У каждого из элементов Таба удаляем класс активности.
     tabs.forEach(item => {
-        item.classList.remove('tabheader__item_active');
+        item.classList.remove(activeClass);
     });   
   }
 
@@ -624,7 +616,7 @@ function tabs() {
   function showTabContent(i = 0) {
     tabsContent[i].classList.add('show', 'fade');
     tabsContent[i].classList.remove('hide');
-    tabs[i].classList.add('tabheader__item_active');
+    tabs[i].classList.add(activeClass);
   }
 
   hideTabContent();
@@ -634,8 +626,8 @@ function tabs() {
   tabsParent.addEventListener('click', (event) => {
     const target = event.target; // Это если нам нужно все время использовать event.target. 
 
-    // Определяем точно ли мы кликнули в таб. Перебираем все эелементы в псевдомассиве, чтобы понять в какой мы клацнули и какой нужно показать. Два аргумента: таб и номер элемента по порядку. Если эелемент, в который мы кликнули, будет совпадать с элементом, который мы перебираем, то мы вызываем две наши функции.
-    if (target && target.classList.contains('tabheader__item')) {
+    // Определяем точно ли мы кликнули в таб. Перебираем все эелементы в псевдомассиве, чтобы понять в какой мы клацнули и какой нужно показать. Два аргумента: таб и номер элемента по порядку. Если эелемент, в который мы кликнули, будет совпадать с элементом, который мы перебираем, то мы вызываем две наши функции. Метод slice() - сформирует новую строку без 1 символа в данном случае. 
+    if (target && target.classList.contains(tabsSelector.slice(1))) {
         tabs.forEach((item, i) => {
           if (target == item) {
               hideTabContent();
@@ -660,12 +652,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-function timer() {
+function timer(id, deadline) {
   // Timer ============================================================================================>>
-
-  // Переменная, которая определяет дэдлайн. Наша отправная точка.
-  const deadline = '2022-09-10';
-
+  
   // Функция, которая определяет разницу между дэдлайном и текущим временем.
   function getTimeRemaining(endtime) {
     let days, hours, minutes, seconds;
@@ -731,10 +720,49 @@ function timer() {
     }
   }
 
-  setClock('.timer', deadline);
+  setClock(id, deadline);
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (timer);
+
+/***/ }),
+
+/***/ "./js/services/services.js":
+/*!*********************************!*\
+  !*** ./js/services/services.js ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "getResource": () => (/* binding */ getResource),
+/* harmony export */   "postData": () => (/* binding */ postData)
+/* harmony export */ });
+// Логика: ф-ия настраивает запрос, посылает запрос на сервер, получает какой то ответ и трансформирует ответ в json.  
+const postData = async (url, data) => {
+  const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        'Content-type': 'application/json'
+      },
+      body: data
+  });
+
+  return await res.json();
+};
+
+async function getResource(url) {
+  let res = await fetch(url);
+
+  if (!res.ok) {
+      throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+
+
 
 /***/ })
 
@@ -814,17 +842,29 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
   
 
 window.addEventListener('DOMContentLoaded', () => {
+   //Чтобы модалка появлялась через опредленный промежуток времени сама. Используем setTimeout.
+  const modalTimerId = setTimeout(() => (0,_modules_modal__WEBPACK_IMPORTED_MODULE_4__.openModal)('.modal', modalTimerId), 50000);
 
-   (0,_modules_tabs__WEBPACK_IMPORTED_MODULE_0__["default"])();
+   (0,_modules_tabs__WEBPACK_IMPORTED_MODULE_0__["default"])('.tabheader__item', '.tabcontent', '.tabheader__items', 'tabheader__item_active');
    (0,_modules_calc__WEBPACK_IMPORTED_MODULE_1__["default"])(); 
    (0,_modules_cards__WEBPACK_IMPORTED_MODULE_2__["default"])();
-   (0,_modules_forms__WEBPACK_IMPORTED_MODULE_3__["default"])();
-   (0,_modules_modal__WEBPACK_IMPORTED_MODULE_4__["default"])();
-   (0,_modules_slider__WEBPACK_IMPORTED_MODULE_5__["default"])();
-   (0,_modules_timer__WEBPACK_IMPORTED_MODULE_6__["default"])();
+   (0,_modules_forms__WEBPACK_IMPORTED_MODULE_3__["default"])('form', modalTimerId);
+   (0,_modules_modal__WEBPACK_IMPORTED_MODULE_4__["default"])('[data-modal]', '.modal', modalTimerId);
+   (0,_modules_timer__WEBPACK_IMPORTED_MODULE_6__["default"])('.timer', '2022-09-30');
+   (0,_modules_slider__WEBPACK_IMPORTED_MODULE_5__["default"])({
+      container: '.offer__slider',
+      nextArrow: '.offer__slider-next',
+      prevArrow: '.offer__slider-prev',
+      slide: '.offer__slide',
+      totalCounter: '#total',
+      currentCounter: '#current',
+      wrapper: '.offer__slider-wrapper',
+      field: '.offer__slider-inner'
+   });
 });
 })();
 

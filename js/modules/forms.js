@@ -1,8 +1,11 @@
-function forms() {
+import {closeModal, openModal} from './modal';
+import {postData} from '../services/services';
+
+function forms(formSelector, modalTimerId) {
   // Forms =================================================================================================>>
 
   // Получаем все формы, которые у нас есть.
-  const forms = document.querySelectorAll('form');
+  const forms = document.querySelectorAll(formSelector);
 
   // Временно создаем список фраз для оповщения пользователя. 
   const message = {
@@ -15,20 +18,6 @@ function forms() {
   forms.forEach(item => {
     bindPostData(item);
   });
-
-
-  // Логика: ф-ия настраивает запрос, посылает запрос на сервер, получает какой то ответ и трансформирует ответ в json.  
-  const postData = async (url, data) => {
-    const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          'Content-type': 'application/json'
-        },
-        body: data
-    });
-
-    return await res.json();
-  };
 
   // Создаем функцию, которая будет отвечать за постинг данных. Передаем форму, потому что удобно взять и навесить обработчик событий. Submit - срабатывает каждый раз, когда мы пытаемся отправить какую то форму. Element - нужен для того, чтобы отменить стандартное поведение браузера (перезагрузку страницы).
   function bindPostData(form) {
@@ -66,7 +55,7 @@ function forms() {
     const prevModalDialog = document.querySelector('.modal__dialog');
 
     prevModalDialog.classList.add('hide');
-    openModal();
+    openModal('.modal', modalTimerId);
 
     const thanksModal = document.createElement('div');
     thanksModal.classList.add('modal__dialog');
@@ -82,7 +71,7 @@ function forms() {
         thanksModal.remove();
         prevModalDialog.classList.add('show');
         prevModalDialog.classList.remove('hide');
-        closeModal();
+        closeModal('.modal');
     }, 4000);
   }
 }
